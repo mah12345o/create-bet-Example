@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { IoArrowBackCircle } from "react-icons/io5";
 import { useLocation } from 'react-router-dom';
@@ -10,6 +10,78 @@ const DetailsPage = () => {
   const MatchDate = searchParams.get('MatchDate');
   const Team1 = searchParams.get('Team1');
   const Team2 = searchParams.get('Team2');
+  const matchid = searchParams.get('MatchId')
+  const [gamedetails, setGamedetails] = useState([]);
+  const [totalodds, setTotalodds] = useState([]);
+  const isMounted = useRef(false);
+
+
+
+  // function fetchData() {
+  //   // if (!isMounted.current) {
+  //   //   isMounted.current = true;
+
+  //     fetch(`https://cms.bettorlogic.com/api/BetBuilder/GetBetBuilderBets?sports=1&matchId=${matchid}&marketId=${selectedMarketId}&legs=${selectedId}&language=en`)
+  //       .then(res => res.json())
+  //       .then(data => {
+  //         setGamedetails(data.BetBuilderSelections);
+  //         setTotalodds(data.TotalOdds);
+  //       })
+        
+  //   // }
+  // }
+  function fetchData() {
+    fetch(`https://cms.bettorlogic.com/api/BetBuilder/GetBetBuilderBets?sports=1&matchId=${matchid}&marketId=${selectedMarketId}&legs=${selectedId}&language=en`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return res.json();
+      })
+      .then(data => {
+        setGamedetails(data.BetBuilderSelections);
+        setTotalodds(data.TotalOdds);
+      })
+      .catch(error => {
+        alert('No leg exist:', error);
+        // Handle the error (e.g., set error state, show error message)
+      });
+  }
+  
+
+
+
+  const [markets, setMarkets] = useState([]);
+  const [selection, setSelections] = useState([]);
+  const [selectedMarketId, setSelectedMarketId] = useState('8');
+  const [selectedId, setSelectedId] = useState('4');
+
+  useEffect(() => {
+    // Fetch markets data
+    fetch('http://cms.bettorlogic.com/api/BetBuilder/GetMarkets?sports=1')
+      .then(response => response.json())
+      .then(data => {
+        setMarkets(data);
+        return fetch('https://cms.bettorlogic.com/api/BetBuilder/GetSelections?sports=1'); // Return the promise for the next then block
+      })
+      .then(response => response.json())
+      .then(data => setSelections(data))
+      .catch(error => console.error('Error fetching data:', error));
+  }, []);
+
+  const handleMarketChange = (event) => {
+    setSelectedMarketId(event.target.value);
+  };
+
+  const handleSelctionChange = (event) => {
+    setSelectedId(event.target.value);
+  };
+
+  useEffect(() => {
+    fetchData()
+
+    
+  }, [selectedMarketId,selection,selectedId]);
   return (
     <div className='container'>
       <Link to="/">
@@ -30,20 +102,35 @@ const DetailsPage = () => {
         <div className='row'>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ fontWeight: '800' }}>Selection :
-              <select>
-                <option>Half time result -Draw</option>
-                <option>Half time result</option>
+              <select value={selectedMarketId} onChange={handleMarketChange}>
+                {markets.map(market => (
+                  <option key={market.MarketId} value={market.MarketId}>
+                    {market.MarketName}
+                  </option>
+                ))}
               </select>
             </div>
+
+            {/* {markets.map(market => (
+          <option key={market.MarketId} value={market.MarketId}>
+            {market.MarketName}
+          </option>
+        ))} */}
+
+
+
             <div style={{ fontWeight: '800' }}>Legs :
-              <select style={{ width: '40px' }}>
-                <option>1</option>
-                <option>2</option>
+              <select style={{ width: '40px' }} value={selectedId} onChange={handleSelctionChange}>
+              {selection.map(selection => (
+                  <option key={selection.selectionId} value={selection.selectionValue}>
+                  {selection.selectionValue}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
           <div className='col-12 col-md-12 col-lg-12 py-3' style={{ fontWeight: '800' }}>Bet Builder Odds :
-            <span style={{ color: '#ff0000cc' }}>236</span>
+            <span style={{ color: '#ff0000cc' }}>{totalodds}</span>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -53,28 +140,13 @@ const DetailsPage = () => {
                 <th >Outcome</th>
               </tr>
             </thead>
-
             <tbody>
-              <tr >
-                <td >Brentfort have drawn the first half in 5 of their last 6 home games</td>
-                <td >Half Time Result</td>
-                <td >Draw</td>
-              </tr>
-              <tr >
-                <td >There have been at least 5 cards in all of the last 5 Newcastle games.</td>
-                <td >Half Time Result</td>
-                <td >Draw</td>
-              </tr>
-              <tr >
-                <td >Ivan Toney has scored in his last 3 appearances.</td>
-                <td >Half Time Result</td>
-                <td >Draw</td>
-              </tr>
-              <tr style={{ padding: '8px' }}>
-                <td >Brentford have lost 7 of their last 8 games.</td>
-                <td >Half Time Result</td>
-                <td >Draw</td>
-              </tr>
+              {gamedetails.map((getdata) => <tr >
+                <td >{getdata.RTB.match(/\d+/)?parseInt(match[0]):'red':''}</td>
+                <td >{getdata.Market}</td>
+                <td >{getdata.Selection}</td>
+              </tr>)}
+
             </tbody>
           </table>
 

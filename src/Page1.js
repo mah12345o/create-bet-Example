@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { IoIosFootball } from "react-icons/io";
 
@@ -7,39 +7,38 @@ const Page1 = () => {
   const [data, setData] = useState([]);
   const [filterDates, setFilterDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState();
+  const isMounted = useRef(false); 
+  useEffect(() => {  
 
-  function fetchdata(params) {
-    const currentDate = new Date();
-    fetch('https://cms.bettorlogic.com/api/BetBuilder/GetFixtures?sports=1')
-      .then(res => res.json())
-      .then(data => {
-        setData(data);
-        const todayMatches = data.filter(match => {
-          const matchDate = new Date(match.MatchDate);
-          return matchDate.toDateString() === currentDate.toDateString();
+    if (!isMounted.current) { 
+      isMounted.current = true;
+      console.log('Fetching data...1');
+      const currentDate = new Date();
+      const nextDates = [];
+      const fullDates = [];
+      for (let i = 0; i < 8; i++) {
+        const date = new Date();
+        date.setDate(currentDate.getDate() + i);
+        fullDates.push(date.toString());
+        nextDates.push(date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }));
+      }
+      setDates(nextDates);
+      setFilterDates(fullDates);
+  
+      fetch('https://cms.bettorlogic.com/api/BetBuilder/GetFixtures?sports=1')
+        .then(res => res.json())
+        .then(data => {
+          const todayMatches = data.filter(match => {
+            const matchDate = new Date(match.MatchDate);
+            return matchDate.toDateString() === currentDate.toDateString();
+          });
+          setData(todayMatches);
         });
-        setData(todayMatches);
-      });
-  }
-  useEffect(() => {
-    fetchdata()
-  }, []);
-
-  useEffect(() => {
-    const currentDate = new Date();
-    const nextDates = [];
-    const fullDates = [];
-    for (let i = 0; i < 8; i++) {
-      const date = new Date();
-      date.setDate(currentDate.getDate() + i);
-      fullDates.push(date.toString());
-      nextDates.push(date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }));
     }
-    setDates(nextDates);
-    setFilterDates(fullDates);
+
   }, []);
 
-  function handleDateClicked(date) {
+  function handleDateClicked(date) {console.log('Fetching data...2');
     setSelectedDate(date);
     const selectedDateMatches = data.filter(match => {
       const matchDate = new Date(match.MatchDate);
@@ -47,6 +46,7 @@ const Page1 = () => {
     });
     setData(selectedDateMatches);
   }
+  
 
   const groupedData = data.reduce((acc, curr) => {
     const country = curr.Country;
@@ -62,7 +62,8 @@ const Page1 = () => {
       <div>
         <div className='first-section'>
           {dates.map((date, index) => (
-            <button key={index} onClick={() => handleDateClicked(filterDates[index], setSelectedDate(filterDates[index]))} className={`btn mx-2 ${selectedDate === filterDates[index] ? 'btn-primary' : 'btn-secondary'}`} dangerouslySetInnerHTML={{ __html: date.replace(/,/g, ",<br>") }}></button>
+         <button key={index} onClick={() => handleDateClicked(filterDates[index])} className={`btn mx-2 ${selectedDate === filterDates[index] ? 'btn-primary' : 'btn-secondary'}`} dangerouslySetInnerHTML={{ __html: date.replace(/,/g, ",<br>") }}></button>
+
           ))}
         </div>
 
@@ -79,7 +80,7 @@ const Page1 = () => {
                   {groupedData[country].map(game => (
                     <Link
                       key={game.id}
-                      to={`/details?MatchDate=${encodeURIComponent(game.MatchDate)}&Team1=${encodeURIComponent(game.Team1Name)}&Team2=${encodeURIComponent(game.Team2Name)}`}
+                      to={`/details?MatchId=${encodeURIComponent(game.MatchId)}&Team1=${encodeURIComponent(game.Team1Name)}&Team2=${encodeURIComponent(game.Team2Name)}`}
                     >
                       <div className='row p-2 mx-4 text-center align-items-center' style={{ color: 'black', borderBottom: '2px solid #8080805e' }}>
                         <div className='col-5 col-md-5 col-lg-5 p-0'>{game.Team1Name}</div>
