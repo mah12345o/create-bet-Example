@@ -12,7 +12,6 @@ const Page1 = () => {
 
     if (!isMounted.current) { 
       isMounted.current = true;
-      console.log('Fetching data...1');
       const currentDate = new Date();
       const nextDates = [];
       const fullDates = [];
@@ -38,7 +37,7 @@ const Page1 = () => {
 
   }, []);
 
-  function handleDateClicked(date) {console.log('Fetching data...2');
+  function handleDateClicked(date) {
     setSelectedDate(date);
     const selectedDateMatches = data.filter(match => {
       const matchDate = new Date(match.MatchDate);
@@ -63,16 +62,14 @@ const Page1 = () => {
         <div className='first-section'>
           {dates.map((date, index) => (
          <button key={index} onClick={() => handleDateClicked(filterDates[index])} className={`btn mx-2 ${selectedDate === filterDates[index] ? 'btn-primary' : 'btn-secondary'}`} dangerouslySetInnerHTML={{ __html: date.replace(/,/g, ",<br>") }}></button>
-
           ))}
         </div>
-
         <div className='games'>
           <div className='heading py-2'>
             <div><IoIosFootball className='me-2' style={{ fontSize: '23px', color: 'blue' }} /></div>
             <h3 style={{ fontSize: '18px', fontWeight: '800' }}>Football</h3>
           </div>
-          <div style={{ borderRadius: '20px', overflow: 'hidden', backgroundColor: '#8080801f', border: "2px solid lightgray" }}>
+       {data.length>0 ? <div style={{ borderRadius: '20px', overflow: 'hidden', backgroundColor: '#8080801f', border: "2px solid lightgray" }}>
             <div>
               {Object.keys(groupedData).map(country => (
                 <div key={country}>
@@ -80,7 +77,7 @@ const Page1 = () => {
                   {groupedData[country].map(game => (
                     <Link
                       key={game.id}
-                      to={`/details?MatchId=${encodeURIComponent(game.MatchId)}&Team1=${encodeURIComponent(game.Team1Name)}&Team2=${encodeURIComponent(game.Team2Name)}`}
+                      to={`/details?MatchId=${encodeURIComponent(game.MatchId)}&Team1=${encodeURIComponent(game.Team1Name)}&Team2=${encodeURIComponent(game.Team2Name)}&MatchDate=${encodeURIComponent(game.MatchDate)}`}
                     >
                       <div className='row p-2 mx-4 text-center align-items-center' style={{ color: 'black', borderBottom: '2px solid #8080805e' }}>
                         <div className='col-5 col-md-5 col-lg-5 p-0'>{game.Team1Name}</div>
@@ -92,7 +89,7 @@ const Page1 = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div>:<div style={{display:'flex',alignItems:'center',justifyContent:'center'}}>Loading ....</div>}
         </div>
       </div>
     </div>

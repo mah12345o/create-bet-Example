@@ -11,25 +11,48 @@ const DetailsPage = () => {
   const Team1 = searchParams.get('Team1');
   const Team2 = searchParams.get('Team2');
   const matchid = searchParams.get('MatchId')
+
   const [gamedetails, setGamedetails] = useState([]);
   const [totalodds, setTotalodds] = useState([]);
+  const [markets, setMarkets] = useState([]);
+  const [selection, setSelections] = useState([]);
+  const [selectedMarketId, setSelectedMarketId] = useState('8');
+  const [selectedId, setSelectedId] = useState('4');
+
   const isMounted = useRef(false);
+  const isMountedSecond = useRef(false);
 
+  useEffect(() => {
+    if (isMounted.current) {
+      fetchData();
+    } else {
+      isMounted.current = true;
+    }
+  }, [selectedMarketId, selection, selectedId]);
 
+  useEffect(() => {
+    if (!isMountedSecond.current) {
+      isMountedSecond.current = true;
+      fetch('http://cms.bettorlogic.com/api/BetBuilder/GetMarkets?sports=1')
+        .then(response => response.json())
+        .then(data => {
+          setMarkets(data);
+          return fetch('https://cms.bettorlogic.com/api/BetBuilder/GetSelections?sports=1'); // Return the promise for the next then block
+        })
+        .then(response => response.json())
+        .then(data => setSelections(data))
+        .catch(error => console.error('Error fetching data:', error));
+    }
+  }, []);
 
-  // function fetchData() {
-  //   // if (!isMounted.current) {
-  //   //   isMounted.current = true;
+  const handleMarketChange = (event) => {
+    setSelectedMarketId(event.target.value);
+  };
 
-  //     fetch(`https://cms.bettorlogic.com/api/BetBuilder/GetBetBuilderBets?sports=1&matchId=${matchid}&marketId=${selectedMarketId}&legs=${selectedId}&language=en`)
-  //       .then(res => res.json())
-  //       .then(data => {
-  //         setGamedetails(data.BetBuilderSelections);
-  //         setTotalodds(data.TotalOdds);
-  //       })
-        
-  //   // }
-  // }
+  const handleSelctionChange = (event) => {
+    setSelectedId(event.target.value);
+  };
+
   function fetchData() {
     fetch(`https://cms.bettorlogic.com/api/BetBuilder/GetBetBuilderBets?sports=1&matchId=${matchid}&marketId=${selectedMarketId}&legs=${selectedId}&language=en`)
       .then(res => {
@@ -44,44 +67,9 @@ const DetailsPage = () => {
       })
       .catch(error => {
         alert('No leg exist:', error);
-        // Handle the error (e.g., set error state, show error message)
       });
   }
-  
 
-
-
-  const [markets, setMarkets] = useState([]);
-  const [selection, setSelections] = useState([]);
-  const [selectedMarketId, setSelectedMarketId] = useState('8');
-  const [selectedId, setSelectedId] = useState('4');
-
-  useEffect(() => {
-    // Fetch markets data
-    fetch('http://cms.bettorlogic.com/api/BetBuilder/GetMarkets?sports=1')
-      .then(response => response.json())
-      .then(data => {
-        setMarkets(data);
-        return fetch('https://cms.bettorlogic.com/api/BetBuilder/GetSelections?sports=1'); // Return the promise for the next then block
-      })
-      .then(response => response.json())
-      .then(data => setSelections(data))
-      .catch(error => console.error('Error fetching data:', error));
-  }, []);
-
-  const handleMarketChange = (event) => {
-    setSelectedMarketId(event.target.value);
-  };
-
-  const handleSelctionChange = (event) => {
-    setSelectedId(event.target.value);
-  };
-
-  useEffect(() => {
-    fetchData()
-
-    
-  }, [selectedMarketId,selection,selectedId]);
   return (
     <div className='container'>
       <Link to="/">
@@ -102,7 +90,7 @@ const DetailsPage = () => {
         <div className='row'>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ fontWeight: '800' }}>Selection :
-              <select value={selectedMarketId} onChange={handleMarketChange}>
+              <select style={{width:'100px'}} value={selectedMarketId} onChange={handleMarketChange}>
                 {markets.map(market => (
                   <option key={market.MarketId} value={market.MarketId}>
                     {market.MarketName}
@@ -110,20 +98,11 @@ const DetailsPage = () => {
                 ))}
               </select>
             </div>
-
-            {/* {markets.map(market => (
-          <option key={market.MarketId} value={market.MarketId}>
-            {market.MarketName}
-          </option>
-        ))} */}
-
-
-
             <div style={{ fontWeight: '800' }}>Legs :
               <select style={{ width: '40px' }} value={selectedId} onChange={handleSelctionChange}>
-              {selection.map(selection => (
+                {selection.map(selection => (
                   <option key={selection.selectionId} value={selection.selectionValue}>
-                  {selection.selectionValue}
+                    {selection.selectionValue}
                   </option>
                 ))}
               </select>
@@ -141,19 +120,26 @@ const DetailsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {gamedetails.map((getdata) => <tr >
-                <td >{getdata.RTB.match(/\d+/)?parseInt(match[0]):'red':''}</td>
+              {gamedetails.map((getdata) => <tr key={getdata.MarketId}>
+                <td style={{ color: "black" }}>
+                  {getdata.RTB.split(/\b(\d+)\b/g).map((part, index) => {
+                    const isNumber = /^\d+$/.test(part);
+                    return isNumber ? (
+                      <span key={index} style={{ color: "red", fontWeight: "700" }}>{part}</span>
+                    ) : (
+                      <span key={index}>{part}</span>
+                    );
+                  })}
+                </td>
                 <td >{getdata.Market}</td>
                 <td >{getdata.Selection}</td>
               </tr>)}
-
             </tbody>
           </table>
-
         </div>
       </div>
     </div>
   )
 }
 
-export default DetailsPage
+export default DetailsPage;
