@@ -7,9 +7,9 @@ const Page1 = () => {
   const [data, setData] = useState([]);
   const [filterDates, setFilterDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState();
-  const isMounted = useRef(false); 
-  useEffect(() => {  
+  const isMounted = useRef(false);
 
+  useEffect(() => {  
     if (!isMounted.current) { 
       isMounted.current = true;
       const currentDate = new Date();
@@ -34,7 +34,6 @@ const Page1 = () => {
           setData(todayMatches);
         });
     }
-
   }, []);
 
   function handleDateClicked(date) {

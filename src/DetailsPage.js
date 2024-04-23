@@ -6,29 +6,38 @@ import { useLocation } from 'react-router-dom';
 const DetailsPage = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-
   const MatchDate = searchParams.get('MatchDate');
   const Team1 = searchParams.get('Team1');
   const Team2 = searchParams.get('Team2');
   const matchid = searchParams.get('MatchId')
-
   const [gamedetails, setGamedetails] = useState([]);
   const [totalodds, setTotalodds] = useState([]);
   const [markets, setMarkets] = useState([]);
   const [selection, setSelections] = useState([]);
   const [selectedMarketId, setSelectedMarketId] = useState('8');
   const [selectedId, setSelectedId] = useState('4');
-
   const isMounted = useRef(false);
   const isMountedSecond = useRef(false);
 
   useEffect(() => {
-    if (isMounted.current) {
-      fetchData();
-    } else {
+    if (!isMounted.current) {
+      fetch(`https://cms.bettorlogic.com/api/BetBuilder/GetBetBuilderBets?sports=1&matchId=${matchid}&marketId=${selectedMarketId}&legs=${selectedId}&language=en`)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return res.json();
+        })
+        .then(data => {
+          setGamedetails(data.BetBuilderSelections);
+          setTotalodds(data.TotalOdds);
+        })
+        .catch(error => {
+          alert('No leg exist:', error);
+        });
       isMounted.current = true;
     }
-  }, [selectedMarketId, selection, selectedId]);
+  }, [selectedMarketId, selectedId]);
 
   useEffect(() => {
     if (!isMountedSecond.current) {
@@ -37,7 +46,7 @@ const DetailsPage = () => {
         .then(response => response.json())
         .then(data => {
           setMarkets(data);
-          return fetch('https://cms.bettorlogic.com/api/BetBuilder/GetSelections?sports=1'); // Return the promise for the next then block
+          return fetch('https://cms.bettorlogic.com/api/BetBuilder/GetSelections?sports=1'); 
         })
         .then(response => response.json())
         .then(data => setSelections(data))
@@ -47,28 +56,16 @@ const DetailsPage = () => {
 
   const handleMarketChange = (event) => {
     setSelectedMarketId(event.target.value);
+    isMounted.current = false;
+    isMountedSecond.current = false;
   };
 
   const handleSelctionChange = (event) => {
     setSelectedId(event.target.value);
+    isMounted.current = false;
+    isMountedSecond.current = false;
   };
 
-  function fetchData() {
-    fetch(`https://cms.bettorlogic.com/api/BetBuilder/GetBetBuilderBets?sports=1&matchId=${matchid}&marketId=${selectedMarketId}&legs=${selectedId}&language=en`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return res.json();
-      })
-      .then(data => {
-        setGamedetails(data.BetBuilderSelections);
-        setTotalodds(data.TotalOdds);
-      })
-      .catch(error => {
-        alert('No leg exist:', error);
-      });
-  }
 
   return (
     <div className='container'>
