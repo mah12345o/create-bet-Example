@@ -108,7 +108,7 @@ const DetailsPage = () => {
           <div className='col-12 col-md-12 col-lg-12 py-3' style={{ fontWeight: '800' }}>Bet Builder Odds :
             <span style={{ color: '#ff0000cc' }}>{totalodds}</span>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        { gamedetails.length>1 ? <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ color: '#ff0000cc', padding: '8px', backgroundColor: ' #f2f2f2' }}>
                 <th >Key Stats</th>
@@ -117,7 +117,7 @@ const DetailsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {gamedetails.map((getdata) => <tr key={getdata.MarketId}>
+              { gamedetails.map((getdata) => <tr key={getdata.MarketId}>
                 <td style={{ color: "black" }}>
                   {getdata.RTB.split(/\b(\d+)\b/g).map((part, index) => {
                     const isNumber = /^\d+$/.test(part);
@@ -132,7 +132,7 @@ const DetailsPage = () => {
                 <td >{getdata.Selection}</td>
               </tr>)}
             </tbody>
-          </table>
+          </table>:<div style={{textAlign:'center'}}>No data found</div>}
         </div>
       </div>
     </div>

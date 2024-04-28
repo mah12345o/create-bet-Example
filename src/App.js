@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import Header from './Header';
 import Page1 from './Page1';
-import DetailsPage from './DetailsPage';
+import DetailsPage from './DetailsPage';import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {
   return (
